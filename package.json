@@ -1,0 +1,17 @@
+{
+  "name": "constructorcli",
+  "version": "0.1.0",
+  "description": "GMEdit-Constructor for the command line",
+  "keywords": [
+    "gamemaker",
+    "cli",
+    "gmedit",
+    "constructor"
+  ],
+  "author": "brenioks",
+  "type": "module",
+  "main": "cli.js",
+  "scripts": {
+    "test": "node cli.js"
+  }
+}

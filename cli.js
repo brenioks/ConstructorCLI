@@ -1,17 +1,6 @@
 // FIXME: Import/Use global namespace as definitions inside it are scattered around files
-import { CompileControllerImpl } from './GMEdit-Constructor/js/compiler/CompileControllerImpl.js';
-import * as igorPaths from './GMEdit-Constructor/js/compiler/igor-paths.js';
-import { project_current_get, open_files_save, project_format_get, tab_current_get } from './GMEdit-Constructor/js/utils/project.js'; // GMEdit.Project
-import { ProjectProperties } from './GMEdit-Constructor/js/preferences/ProjectProperties.js';
-import { BaseError, InvalidStateErr, SolvableError } from './GMEdit-Constructor/js/utils/Err.js';
-import { Preferences } from './GMEdit-Constructor/js/preferences/Preferences.js';
-import { docString } from './GMEdit-Constructor/js/utils/StringUtils.js';
-import * as nodeModulesProvider from './GMEdit-Constructor/js/utils/node/node-import.js';
-import { GMS2RuntimeIndexerImpl } from './GMEdit-Constructor/js/compiler/GMS2RuntimeIndexerImpl.js';
-import { UserIndexerImpl } from './GMEdit-Constructor/js/compiler/UserIndexerImpl.js';
-import { GMRuntimeVersion } from './GMEdit-Constructor/js/compiler/GMVersion.js';
-import { NodeJSDiskIO } from './GMEdit-Constructor/js/utils/io/NodeJSDiskIO.js';
-
+import { global } from "./GMEdit-Constructor/js/index.d.ts";
+//import { global } from './GMEdit-Constructor/js/index.js';
 
 const projectPath = "where the cli was called (.)";
 
