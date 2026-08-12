@@ -1,4 +1,4 @@
-import { IgorJob } from './GMEdit-Constructor/js/compiler/job/IgorJob.js';
+//import { IgorJob } from './GMEdit-Constructor/js/compiler/job/IgorJob.js';
 import { child_process } from './GMEdit-Constructor/js/utils/node/node-import.js';
 import { Err, Ok } from './GMEdit-Constructor/js/utils/Result.js';
 
