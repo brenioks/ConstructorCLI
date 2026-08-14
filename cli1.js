@@ -1,14 +1,78 @@
 //import { IgorJob } from './GMEdit-Constructor/js/compiler/job/IgorJob.js';
-import { child_process } from './GMEdit-Constructor/js/utils/node/node-import.js';
 import * as igorPaths from './GMEdit-Constructor/js/compiler/igor-paths.js';
 import { Err, Ok } from './GMEdit-Constructor/js/utils/Result.js';
 import { BaseError, InvalidStateErr, SolvableError } from './GMEdit-Constructor/js/utils/Err.js';
 import { GMRuntimeVersion } from './GMEdit-Constructor/js/compiler/GMVersion.js';
 
+/** @type {import('node:child_process')} */ 
+let child_process;
+
+function getFlagsForJobSettings(settings, project) {
+
+	const projectName = project.displayName;
+	const blob_extension = "win";
+
+	const flags = [
+		'/project=' + project.dir,
+		'/config=' + settings.configName,
+		'/rp=' + settings.runtime.path,
+		'/runtime=' + settings.runtimeType,
+		'/cache=' + settings.buildPath + 'cache',
+		'/of=' + settings.buildPath + 'output' + `${projectName}.${blob_extension}`,
+		`/uf=${settings.user.fullPath}`,
+		'/v'
+	];
+
+	if (settings.prefabsPath !== undefined) {
+		flags.push(`/prefabs=${settings.prefabsPath}`);
+	}
+
+	// ignore cache, this fixes changes not applying in yyc
+	if (settings.runtimeType === 'YYC') {
+		flags.push('/ic');
+	}
+
+	if (settings.threads !== undefined) {
+		flags.push(`/j=${settings.threads}`);
+	}
+
+	if (settings.device !== undefined) {
+		flags.push(
+			`/df=${settings.device.filePath}`,
+			`/device=${settings.device.name}`
+		);
+	}
+
+	/** @type {string} */
+	let igorVerb = settings.task;
+
+	switch (settings.platform) {
+		case 'HTML5':
+			if (settings.task === 'Package') {
+				igorVerb = 'folder';
+			}
+		break;
+
+		case 'Windows':
+		case 'Mac':
+			if (settings.task === 'Package') {
+				igorVerb = 'PackageZip';
+			}
+		break;
+	}
+
+	flags.push('--');
+	flags.push(settings.platform, igorVerb);
+
+	return flags;
+}
+
 async function spawn(settings, project) {
 	/** @type {NodeJS.ProcessEnv} */
 	const env = Object.assign({}, process.env);
 	
+	const flags = getFlagsForJobSettings(settings, project);
+
 	/** @type {import('node:child_process').SpawnOptionsWithoutStdio} */
 	const spawn_opts = {
 		cwd: project.dir,
@@ -22,7 +86,7 @@ async function spawn(settings, project) {
 	let startTime;
 
 	try {
-		proc = child_process.spawn(settings.runtime.igorPath, flags, spawn_opts);
+		proc = child_process.spawn(settings.runtime.igorPath);
 
 		startTime = await new Promise((resolve, reject) => {
 			proc.once('spawn', () => resolve(new Date()));
@@ -62,12 +126,13 @@ const job = await spawn({
 	user,
 	runtime,
 	prefabsPath: "C:/ProgramData/GameMakerStudio2-LTS2026/Prefabs/",
-	buildPath: "D:/OneDrive/Documents/FreebieProjects/DroidMaker/CLI tests/build",
+	buildPath: "D:/OneDrive/Documents/FreebieProjects/DroidMaker/CLI tests/build/",
 	platform: igorPaths.HOST_PLATFORM,
 	device: undefined,
 	runtimeType: 'VM',
 	configName: 'Default'
 }, {
+	displayName: "CLI tests",
 	dir: "D:/OneDrive/Documents/FreebieProjects/DroidMaker/CLI tests"
 })
 console.log(job);
