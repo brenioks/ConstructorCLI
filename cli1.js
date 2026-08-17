@@ -131,8 +131,8 @@ const startResult = await start({
 	runtimeType: 'VM',
 	configName: 'Default'
 }, {
-	displayName: "CLI tests",
-	dir: "D:/OneDrive/Documents/FreebieProjects/DroidMaker/CLI tests"
+	displayName: "fnaf 3D clone",
+	dir: "D:/OneDrive/Documents/GameMakerStudio2/fnaf 3D clone/"
 })
 
 if (!startResult.ok) {
