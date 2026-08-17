@@ -4,6 +4,7 @@ import { EventEmitterImpl } from './GMEdit-Constructor/js/utils/EventEmitterImpl
 import { child_process, path } from './GMEdit-Constructor/js/utils/node/node-import.js';
 import { killRecursive } from './GMEdit-Constructor/js/utils/node/process-handling.js';
 import { Err, Ok } from './GMEdit-Constructor/js/utils/Result.js';
+import { job_parse_stdout } from "./parse_stdout.js";
 
 /**
  * Wrapper for an Igor job.
@@ -122,7 +123,7 @@ export class IgorJob {
         this.eventEmitter.emit('stop', {
             stopType: this.state.stopType,
             exitCode: this.state.exitCode,
-            errors: [],
+            errors: job_parse_stdout(this.stdout),
         });
 
         this.process.removeAllListeners();
