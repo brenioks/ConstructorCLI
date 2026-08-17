@@ -11,19 +11,20 @@ function getFlagsForJobSettings(settings, project) {
 	const blob_extension = "win";
 
 	const flags = [
-		`/project=${project.dir}`,
-		`/config=${settings.configName}`,
-		`/rp=${settings.runtime.path}`,
-		`/runtime=${settings.runtimeType}`,
-		`/cache=${settings.buildPath}/cache`,
-		`/of=${settings.buildPath}/output/${projectName}.${blob_extension}`,
-		`/uf=${settings.user.fullPath}`,
+		//`/project=${project.dir}`,
+		// `/config=${settings.configName}`,
+		// `/rp=${settings.runtime.path}`,
+		// `/runtime=${settings.runtimeType}`,
+		// `/cache=${settings.buildPath}/cache`,
+		// `/of=${settings.buildPath}/output/${projectName}.${blob_extension}`,
+		// `/uf=${settings.user.fullPath}`,
+		`/options=D:\\OneDrive\\Documents\\FreebieProjects\\DroidMaker\\CLI tests\\build\\build.bff`,
 		'/v'
 	];
 
-	if (settings.prefabsPath !== undefined) {
-		flags.push(`/prefabs=${settings.prefabsPath}`);
-	}
+	// if (settings.prefabsPath !== undefined) {
+	// 	flags.push(`/prefabs=${settings.prefabsPath}`);
+	// }
 
 	// ignore cache, this fixes changes not applying in yyc
 	if (settings.runtimeType === 'YYC') {
@@ -121,7 +122,7 @@ const user = {
 console.log("Hi Igor starter!");
 
 const startResult = await start({
-	task: 'Package',	// 'Run' | 'Package'
+	task: 'Run',	// 'Run' | 'Package'
 	user,
 	runtime,
 	prefabsPath: "C:/ProgramData/GameMakerStudio2-LTS2026/Prefabs",
@@ -131,8 +132,8 @@ const startResult = await start({
 	runtimeType: 'VM',
 	configName: 'Default'
 }, {
-	displayName: "fnaf 3D clone",
-	dir: "D:/OneDrive/Documents/GameMakerStudio2/fnaf 3D clone/"
+	displayName: "philosophers pit",
+	dir: "D:/OneDrive/Documents/GameMakerStudio2/philosophers pit"
 })
 
 if (!startResult.ok) {
