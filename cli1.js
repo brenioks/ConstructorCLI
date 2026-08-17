@@ -3,6 +3,7 @@ import * as igorPaths from './GMEdit-Constructor/js/compiler/igor-paths.js';
 import { Err, Ok } from './GMEdit-Constructor/js/utils/Result.js';
 import { BaseError, InvalidStateErr, SolvableError } from './GMEdit-Constructor/js/utils/Err.js';
 import { GMRuntimeVersion } from './GMEdit-Constructor/js/compiler/GMVersion.js';
+import { spawn } from 'node:child_process';
 
 /** @type {import('node:child_process')} */ 
 let child_process;
@@ -67,7 +68,7 @@ function getFlagsForJobSettings(settings, project) {
 	return flags;
 }
 
-async function spawn(settings, project) {
+async function start(settings, project) {
 	/** @type {NodeJS.ProcessEnv} */
 	const env = Object.assign({}, process.env);
 	
@@ -86,7 +87,7 @@ async function spawn(settings, project) {
 	let startTime;
 
 	try {
-		proc = child_process.spawn(settings.runtime.igorPath);
+		proc = spawn(settings.runtime.igorPath);
 
 		startTime = await new Promise((resolve, reject) => {
 			proc.once('spawn', () => resolve(new Date()));
@@ -121,7 +122,7 @@ const user = {
 }
 
 console.log("hi igor spawner");
-const job = await spawn({
+const job = await start({
 	task: 'Package',	// 'Run' | 'Package'
 	user,
 	runtime,
