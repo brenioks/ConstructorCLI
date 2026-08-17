@@ -84,7 +84,7 @@ async function start(settings, project) {
 	let startTime;
 
 	try {
-		proc = spawn(settings.runtime.igorPath);
+		proc = spawn(settings.runtime.igorPath, flags, spawn_opts);
 
 		startTime = await new Promise((resolve, reject) => {
 			proc.once('spawn', () => resolve(new Date()));
@@ -118,8 +118,9 @@ const user = {
 	},
 }
 
-console.log("hi igor spawner");
-const job = await start({
+console.log("Hi Igor starter!");
+
+const startResult = await start({
 	task: 'Package',	// 'Run' | 'Package'
 	user,
 	runtime,
@@ -133,4 +134,21 @@ const job = await start({
 	displayName: "CLI tests",
 	dir: "D:/OneDrive/Documents/FreebieProjects/DroidMaker/CLI tests"
 })
+
+if (!startResult.ok) {
+	console.error("Igor job failed!");
+	process.exit(1);
+}
+
+const job = startResult.data;
 console.log(job);
+
+let stdout = "";
+job.events.createGroup({
+	stdout: content => {
+		console.log(content.substring(stdout.length, content.length - 1));
+		stdout = content;
+	},
+	stop: content => console.log("\n", content),
+	stopping: undefined
+});
