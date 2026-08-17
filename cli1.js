@@ -11,12 +11,12 @@ function getFlagsForJobSettings(settings, project) {
 	const blob_extension = "win";
 
 	const flags = [
-		'/project=' + project.dir,
-		'/config=' + settings.configName,
-		'/rp=' + settings.runtime.path,
-		'/runtime=' + settings.runtimeType,
-		'/cache=' + settings.buildPath + 'cache',
-		'/of=' + settings.buildPath + 'output' + `${projectName}.${blob_extension}`,
+		`/project=${project.dir}`,
+		`/config=${settings.configName}`,
+		`/rp=${settings.runtime.path}`,
+		`/runtime=${settings.runtimeType}`,
+		`/cache=${settings.buildPath}/cache`,
+		`/of=${settings.buildPath}/output/${projectName}.${blob_extension}`,
 		`/uf=${settings.user.fullPath}`,
 		'/v'
 	];
@@ -104,14 +104,14 @@ async function start(settings, project) {
 
 const runtime = {
 	version: GMRuntimeVersion.parse("runtime-2026.0.0.23"),
-	path: "C:/ProgramData/GameMakerStudio2-LTS2026/Cache/runtimes/runtime-2026.0.0.23/",
+	path: "C:/ProgramData/GameMakerStudio2-LTS2026/Cache/runtimes/runtime-2026.0.0.23",
 	igorPath: "C:/ProgramData/GameMakerStudio2-LTS2026/Cache/runtimes/runtime-2026.0.0.23/bin/igor/windows/x64/Igor.exe",
 }
 
 const user = {
 	name: "el0fmail1",
 	directoryName: "el0fmail1_2640949",
-	fullPath: "C:/Users/aronb/AppData/Roaming/GameMakerStudio2-LTS2026/el0fmail1_2640949/",
+	fullPath: "C:/Users/aronb/AppData/Roaming/GameMakerStudio2-LTS2026/el0fmail1_2640949",
 	devices: {
 		path: "C:/Users/aronb/AppData/Roaming/GameMakerStudio2-LTS2026/el0fmail1_2640949/devices.json",
 		forPlatform: undefined,
@@ -124,8 +124,8 @@ const startResult = await start({
 	task: 'Package',	// 'Run' | 'Package'
 	user,
 	runtime,
-	prefabsPath: "C:/ProgramData/GameMakerStudio2-LTS2026/Prefabs/",
-	buildPath: "D:/OneDrive/Documents/FreebieProjects/DroidMaker/CLI tests/build/",
+	prefabsPath: "C:/ProgramData/GameMakerStudio2-LTS2026/Prefabs",
+	buildPath: "D:/OneDrive/Documents/FreebieProjects/DroidMaker/CLI tests/build",
 	platform: igorPaths.HOST_PLATFORM,
 	device: undefined,
 	runtimeType: 'VM',
