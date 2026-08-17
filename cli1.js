@@ -1,12 +1,9 @@
-//import { IgorJob } from './GMEdit-Constructor/js/compiler/job/IgorJob.js';
+import { IgorJob } from './IgorJob.js';
 import * as igorPaths from './GMEdit-Constructor/js/compiler/igor-paths.js';
 import { Err, Ok } from './GMEdit-Constructor/js/utils/Result.js';
 import { BaseError, InvalidStateErr, SolvableError } from './GMEdit-Constructor/js/utils/Err.js';
 import { GMRuntimeVersion } from './GMEdit-Constructor/js/compiler/GMVersion.js';
 import { spawn } from 'node:child_process';
-
-/** @type {import('node:child_process')} */ 
-let child_process;
 
 function getFlagsForJobSettings(settings, project) {
 
