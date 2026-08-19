@@ -153,5 +153,3 @@ job.events.createGroup({
 	stop: content => console.log("\n", content),
 	stopping: undefined
 });
-
-// Change
