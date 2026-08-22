@@ -5,21 +5,48 @@ import { BaseError, InvalidStateErr, SolvableError } from './GMEdit-Constructor/
 import { GMRuntimeVersion } from './GMEdit-Constructor/js/compiler/GMVersion.js';
 import { spawn } from 'node:child_process';
 
+
+const ASSET_COMPILER_FEATURE_FLAGS = ["strip_unused_assets"];
+
+function encodeFeatureFlags(flags) {
+	const bytes = Buffer.from(flags.join(","), "utf-8");
+	for (const [i, byte] of bytes.entries()) {
+		bytes[i] = byte + 10;
+	}
+  	return bytes.toString("base64");
+}
+
 function getFlagsForJobSettings(settings, project) {
 
 	const projectName = project.displayName;
 	const blob_extension = "win";
 
 	const flags = [
-		//`/project=${project.dir}`,
-		// `/config=${settings.configName}`,
-		// `/rp=${settings.runtime.path}`,
-		// `/runtime=${settings.runtimeType}`,
-		// `/cache=${settings.buildPath}/cache`,
-		// `/of=${settings.buildPath}/output/${projectName}.${blob_extension}`,
-		// `/uf=${settings.user.fullPath}`,
-		`/options=D:\\OneDrive\\Documents\\FreebieProjects\\DroidMaker\\CLI tests\\build\\build.bff`,
-		'/v'
+		"-rp",
+		settings.runtime.path,
+		"-cache",
+		settings.buildPath + "/cache/",
+		"-project",
+		project.path,
+		"-runtime",
+		settings.runtimeType,
+		"-of",
+		`${settings.buildPath}/output/${projectName}.${blob_extension}`,
+		"-lf",
+		settings.user.fullPath + "/license.plist",
+		"-prefabs",
+		settings.prefabsPath,
+		"-projectool",
+		settings.projectToolPath,
+		"-ac",
+		`/ffe=${encodeFeatureFlags(ASSET_COMPILER_FEATURE_FLAGS)}`,
+		"-jsonErrors",
+		"-uf",
+		settings.user.fullPath,
+		"-config",
+		settings.configName,
+		//`-options=D:\\OneDrive\\Documents\\FreebieProjects\\DroidMaker\\CLI tests\\build\\build.bff`,
+		'-v'
 	];
 
 	// if (settings.prefabsPath !== undefined) {
@@ -28,17 +55,17 @@ function getFlagsForJobSettings(settings, project) {
 
 	// ignore cache, this fixes changes not applying in yyc
 	if (settings.runtimeType === 'YYC') {
-		flags.push('/ic');
+		flags.push('-ic');
 	}
 
 	if (settings.threads !== undefined) {
-		flags.push(`/j=${settings.threads}`);
+		flags.push(`-j=${settings.threads}`);
 	}
 
 	if (settings.device !== undefined) {
 		flags.push(
-			`/df=${settings.device.filePath}`,
-			`/device=${settings.device.name}`
+			`-df=${settings.device.filePath}`,
+			`-device=${settings.device.name}`
 		);
 	}
 
@@ -126,6 +153,7 @@ const startResult = await start({
 	user,
 	runtime,
 	prefabsPath: "C:/ProgramData/GameMakerStudio2-LTS2026/Prefabs",
+	projectToolPath: "C:/ProgramData/GameMakerStudio2-LTS2026/Plugins/@gm-tools-project-tool-win-x64/ProjectTool.exe",
 	buildPath: "D:/OneDrive/Documents/FreebieProjects/DroidMaker/CLI tests/build",
 	platform: igorPaths.HOST_PLATFORM,
 	device: undefined,
@@ -133,7 +161,8 @@ const startResult = await start({
 	configName: 'Default'
 }, {
 	displayName: "philosophers pit",
-	dir: "D:/OneDrive/Documents/GameMakerStudio2/philosophers pit"
+	dir: "D:/OneDrive/Documents/GameMakerStudio2/philosophers pit",
+	path: "D:/OneDrive/Documents/GameMakerStudio2/philosophers pit/philosophers pit.yyp"
 })
 
 if (!startResult.ok) {
