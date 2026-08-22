@@ -55,7 +55,7 @@ function getFlagsForJobSettings(settings, project) {
 		"-jsonErrors=",
 		"-uf=" + settings.user.fullPath,
 		"-config=" + settings.configName,
-		//`-options=D:\\OneDrive\\Documents\\FreebieProjects\\DroidMaker\\CLI tests\\build\\build.bff`,
+		//"-options=" + "D:/OneDrive/Documents/FreebieProjects/DroidMaker//ConstructorCLI/test/build/build.bff",
 	];
 
 	if (settings.prefabsPath !== undefined) {
@@ -167,7 +167,7 @@ const startResult = await start({
 	runtime,
 	prefabsPath: "C:/ProgramData/GameMakerStudio2-LTS2026/Prefabs",
 	projectToolPath: "C:/ProgramData/GameMakerStudio2-LTS2026/Plugins/@gm-tools-project-tool-win-x64/ProjectTool.exe",
-	buildPath: "D:/OneDrive/Documents/FreebieProjects/DroidMaker/CLI tests/build",
+	buildPath: "D:/OneDrive/Documents/FreebieProjects/DroidMaker/ConstructorCLI/test/build",
 	platform: igorPaths.HOST_PLATFORM,
 	device: undefined,
 	runtimeType: 'VM',

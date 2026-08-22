@@ -1,0 +1,10 @@
+# Visual Studio Code
+.vscode/*
+
+# Test builds
+/test/build/output/*
+!/test/build/output/keepdir
+/test/build/cache/*.*
+/test/build/cache/Default/*
+/test/build/cache/philosophe_C3F22D0B/*
+!/test/build/cache/philosophe_C3F22D0B/macros.json
