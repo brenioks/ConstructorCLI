@@ -1,246 +1,206 @@
-// FIXME: Import/Use global namespace as definitions inside it are scattered around files
-import { global } from "./GMEdit-Constructor/js/index.d.ts";
-//import { global } from './GMEdit-Constructor/js/index.js';
+import { IgorJob } from './IgorJob.js';
+import * as igorPaths from './GMEdit-Constructor/js/compiler/igor-paths.js';
+import { Err, Ok } from './GMEdit-Constructor/js/utils/Result.js';
+import { BaseError, InvalidStateErr, SolvableError } from './GMEdit-Constructor/js/utils/Err.js';
+import { GMRuntimeVersion } from './GMEdit-Constructor/js/compiler/GMVersion.js';
+import { spawn } from 'node:child_process';
 
-const projectPath = "where the cli was called (.)";
+// Default flags GameMaker uses every time (decoded)
+const ASSET_COMPILER_FEATURE_FLAGS = [
+	"gm-auth-login",
+	"mqtt",
+	"audio-fx",
+	"operagx-yyc",
+	"intellisense",
+	"nullish",
+	"login_sso",
+	"test",
+	"custom_env",
+	"filt+fx",
+	"gx_mod_wallpaper",
+	"gx_mod_gamestrip",
+	"live_wallpaper_subscription",
+	"code-editor",
+	"strip_unused_assets",
+	"update-process",
+	"package-manager",
+	"prefab-library",
+	"svg",
+	"reddit",
+	"cronus"
+];
 
-/**
- * @implements {Destroyable}
- */
-export class ConstructorCLI {
-	
-	/**
-	 * @private
-	 * @type {Preferences}
-	 */
-	preferences;
-
-	/**	
-	 * @type {ProjectComponents|undefined}
-	 */
-	currentProjectComponents = undefined;
-
-	/**
-	 * Initialise an instance of the plugin!
-	 * 
-	 * @param {NodeModules} nodeModules References to various NodeJS modules we need.
-	 * @returns {Promise<Result<ConstructorPlugin>>}
-	 */
-    static async initialize(nodeModules) {
-		nodeModulesProvider.inject(nodeModules);
-
-		const diskIO = new NodeJSDiskIO(nodeModules.path.join, Electron_FS);
-		const preferences = new Preferences(
-			undefined,  // FIXME: Create an unused and empty problem logger to pass here
-			new GMS2RuntimeIndexerImpl(diskIO),
-			new UserIndexerImpl(diskIO),
-			diskIO
-		);
-
-		return Ok(new ConstructorPlugin(preferences, diskIO));
+function encodeFeatureFlags(flags) {
+	const bytes = Buffer.from(flags.join(","), "utf-8");
+	for (const [i, byte] of bytes.entries()) {
+		bytes[i] = byte + 10;
 	}
-    
-	/**
-	 * Final, synchronous setup for the plugin instance happens here, once we've done the various
-	 * asynchronous and fallible options during the {@link initialize} call.
-	 * 
-	 * @private
-	 * @param {Preferences} preferences 
-	 * @param {DiskIO} diskIO 
-	 */
-	constructor(preferences, diskIO) {
-		this.preferences = preferences;
-
-		/** @private */
-		this.diskIO = diskIO;
-
-        // onProjectOpen (Needs an project to be opened basically)
-		if (this.currentProjectComponents !== undefined) {
-			this.destroyCurrentProjectComponents();
-		}
-
-		// TODO: Use projectPath to open the project
-        const project = project_current_get()
-		const projectFormat = project_format_get(project);
-
-		const projectProperties = new ProjectProperties(
-			project,
-			projectFormat.data.version,
-			this.preferences,
-			this.preferences.getLocalProjectPropertiesStore(project),
-			undefined// this.controlPanel
-		);
-        
-		const compileController = new CompileControllerImpl(project, this.diskIO);
-
-		this.currentProjectComponents = {
-			project,
-			projectProperties,
-			compileController
-		};
-	}
-
-	destroy() {
-
-		if (this.currentProjectComponents !== undefined) {
-			this.destroyCurrentProjectComponents();
-		}
-		
-	}
-    
-	/**
-	 * Clean up the plugin state for the current project. Used when either closing the project, or
-	 * when cleaning up the plugin.
-	 * 
-	 * @private
-	 */
-	destroyCurrentProjectComponents = () => {
-
-		if (this.currentProjectComponents === undefined) {
-			return;
-		}
-
-		const {
-			configTreeUi,
-			compileController,
-			projectProperties
-		} = this.currentProjectComponents;
-
-		projectProperties.destroy();
-
-		// FIXME: respect async here!
-		compileController.destroyAsync();
-
-		delete this.currentProjectComponents;
-
-	}
-
-    static async executeTask(task, components) {
-        const { project, projectProperties, compileController } = components;
-
-        /** @type {GMS2.RuntimeInfo} */
-        let runtime;
-
-        /** @type {GM.ReleaseChannel} */
-        let channel;
-
-        const chosenVersion = projectProperties.getRuntimeVersion();
-
-        if (chosenVersion !== undefined) {
-            channel = /** @type {GM.ReleaseChannel} */ (projectProperties.runtimeReleaseChannel);
-            const result = this.preferences.getRuntimeInfo(channel, chosenVersion);
-
-            runtime = result.data;
-        }
-
-        const user = this.preferences.getDefaultUser(channel);
-
-        if (user === undefined) {
-            // this.controlPanel.error('No user found to compile with.', new SolvableError(
-            //     docString(`
-            //         Constructor couldn't find any users at the data path specified for the
-            //         ${channel} installation.
-            //     `),
-            //     docString(`
-            //         Try specifying a different runtime channel type below, or check that the
-            //         installation data path for ${channel} is correct.
-            //     `)
-            // ));
-            return;
-        }
-
-        //let jobIdToReuse = undefined;
-
-        const job = await compileController.start({
-            task: task,
-            user,
-            runtime,
-            prefabsPath: this.preferences.getPrefabsPath(channel),
-            buildPath: this.getBuildDir(project),
-            platform: projectProperties.platform ?? igorPaths.HOST_PLATFORM,
-            device: projectProperties.device,
-            runtimeType: projectProperties.runtimeBuildType,
-            configName: projectProperties.buildConfigName
-        }/*, jobIdToReuse*/);
-    }
-
-	/**
-	 * Get the build directory to use for the given project.
-	 * 
-	 * @private
-	 * @param {GMEdit.Project} project 
-	 * @returns {string}
-	 */
-	getBuildDir(project) {
-		return this.diskIO.joinPath(project.dir, 'build');
-	}
-
-	runCurrent = () => {
-		if (this.currentProjectComponents !== undefined) {
-			this.executeTask('Run', this.currentProjectComponents);
-		}
-	}
-
-	packageCurrent = () => {
-		if (this.currentProjectComponents !== undefined) {
-			this.executeTask('Package', this.currentProjectComponents);
-		}
-	}
-
-	/**
-	 * Stop the currently viewed job, or the first running job if none are currently in view.
-	 */
-	stopCurrent = () => {
-		if (this.currentProjectComponents === undefined) {
-			return;
-		}
-
-		const currentTab = tab_current_get();
-
-		if (currentTab?.gmlFile.editor instanceof OutputLogTab) {
-			const outputLog = /** @type {JobOutputLog|undefined} */ (currentTab.gmlFile.editor.getClient());
-
-			if (outputLog?.isRunning) {
-				outputLog.stopJob();
-				return;
-			}
-		}
-		
-		for (const output of JobOutputLog.instances) {
-			if (output.job.getState().status === 'running') {
-				output.job.stop();
-				return;
-			}
-		}
-	}
-
-	cleanCurrent = async () => {
-
-		const components = this.currentProjectComponents;
-		
-		if (components === undefined) {
-			return;
-		}
-
-		const buildDir = this.getBuildDir(components.project);
-
-		// Stop existing running jobs, as they wouldn't be too happy about their directories being cleared!
-		await components.compileController.stopAll();
-		
-		// TODO: Swap Electron_FS with something else
-		if (Electron_FS.existsSync(buildDir)) {
-			try {
-				Electron_FS.rmSync(buildDir, { recursive: true });
-			} catch (err) {
-				// this.controlPanel.error('Failed to clean project!', new SolvableError(
-				// 	`An unexpected error occurred while removing the build directory '${buildDir}'.`,
-				// 	'Do you have this directory open somewhere?',
-				// 	err
-				// ));
-				return;
-			}
-		}
-
-	}
-
+  	return bytes.toString("base64");
 }
+
+function getFlagsForJobSettings(settings, project) {
+
+	const projectName = project.displayName;
+	const blob_extension = "win";
+
+	const flags = [
+		"-rp",
+		settings.runtime.path,
+		"-cache",
+		settings.buildPath + "/cache/",
+		"-project",
+		project.path,
+		"-runtime",
+		settings.runtimeType,
+		"-of",
+		`${settings.buildPath}/output/${projectName}.${blob_extension}`,
+		"-lf",
+		settings.user.fullPath + "/license.plist",
+		"-prefabs",
+		settings.prefabsPath,
+		"-projectool",
+		settings.projectToolPath,
+		"-ac",
+		`/ffe=${encodeFeatureFlags(ASSET_COMPILER_FEATURE_FLAGS)}`,
+		"-jsonErrors",
+		"-uf",
+		settings.user.fullPath,
+		"-config",
+		settings.configName,
+		//`-options=D:\\OneDrive\\Documents\\FreebieProjects\\DroidMaker\\CLI tests\\build\\build.bff`,
+		'-v'
+	];
+
+	// if (settings.prefabsPath !== undefined) {
+	// 	flags.push(`/prefabs=${settings.prefabsPath}`);
+	// }
+
+	// ignore cache, this fixes changes not applying in yyc
+	if (settings.runtimeType === 'YYC') {
+		flags.push('-ic');
+	}
+
+	if (settings.threads !== undefined) {
+		flags.push(`-j=${settings.threads}`);
+	}
+
+	if (settings.device !== undefined) {
+		flags.push(
+			`-df=${settings.device.filePath}`,
+			`-device=${settings.device.name}`
+		);
+	}
+
+	/** @type {string} */
+	let igorVerb = settings.task;
+
+	switch (settings.platform) {
+		case 'HTML5':
+			if (settings.task === 'Package') {
+				igorVerb = 'folder';
+			}
+		break;
+
+		case 'Windows':
+		case 'Mac':
+			if (settings.task === 'Package') {
+				igorVerb = 'PackageZip';
+			}
+		break;
+	}
+
+	flags.push('--');
+	flags.push(settings.platform, igorVerb);
+
+	return flags;
+}
+
+async function start(settings, project) {
+	/** @type {NodeJS.ProcessEnv} */
+	const env = Object.assign({}, process.env);
+	
+	const flags = getFlagsForJobSettings(settings, project);
+
+	/** @type {import('node:child_process').SpawnOptionsWithoutStdio} */
+	const spawn_opts = {
+		cwd: project.dir,
+		detached: (process.platform !== 'win32'),
+		env,
+	};
+
+	/** @type {import('node:child_process').ChildProcessWithoutNullStreams} */
+	let proc;
+	/** @type {Date} */
+	let startTime;
+
+	try {
+		proc = spawn(settings.runtime.igorPath, flags, spawn_opts);
+
+		startTime = await new Promise((resolve, reject) => {
+			proc.once('spawn', () => resolve(new Date()));
+			proc.once('error', reject);
+		});
+	} catch (err) {
+		return Err(new InvalidStateErr('While trying to create the Igor process, the spawn() call failed unexpectedly', err));
+	}
+
+	const job = new IgorJob(1, settings, proc, project, startTime);
+
+	//this.jobs.push(job);
+	//job.events.once('stop', () => this.removeJob(job));
+
+	return Ok(job);
+}
+
+const runtime = {
+	version: GMRuntimeVersion.parse("runtime-2026.0.0.23"),
+	path: "C:/ProgramData/GameMakerStudio2-LTS2026/Cache/runtimes/runtime-2026.0.0.23",
+	igorPath: "C:/ProgramData/GameMakerStudio2-LTS2026/Cache/runtimes/runtime-2026.0.0.23/bin/igor/windows/x64/Igor.exe",
+}
+
+const user = {
+	name: "el0fmail1",
+	directoryName: "el0fmail1_2640949",
+	fullPath: "C:/Users/aronb/AppData/Roaming/GameMakerStudio2-LTS2026/el0fmail1_2640949",
+	devices: {
+		path: "C:/Users/aronb/AppData/Roaming/GameMakerStudio2-LTS2026/el0fmail1_2640949/devices.json",
+		forPlatform: undefined,
+	},
+}
+
+console.log("Hi Igor starter!");
+
+const startResult = await start({
+	task: 'Run',	// 'Run' | 'Package'
+	user,
+	runtime,
+	prefabsPath: "C:/ProgramData/GameMakerStudio2-LTS2026/Prefabs",
+	projectToolPath: "C:/ProgramData/GameMakerStudio2-LTS2026/Plugins/@gm-tools-project-tool-win-x64/ProjectTool.exe",
+	buildPath: "D:/OneDrive/Documents/FreebieProjects/DroidMaker/CLI tests/build",
+	platform: igorPaths.HOST_PLATFORM,
+	device: undefined,
+	runtimeType: 'VM',
+	configName: 'Default'
+}, {
+	displayName: "philosophers pit",
+	dir: "D:/OneDrive/Documents/GameMakerStudio2/philosophers pit",
+	path: "D:/OneDrive/Documents/GameMakerStudio2/philosophers pit/philosophers pit.yyp"
+})
+
+if (!startResult.ok) {
+	console.error("Igor job failed!");
+	process.exit(1);
+}
+
+const job = startResult.data;
+console.log(job);
+
+let stdout = "";
+job.events.createGroup({
+	stdout: content => {
+		console.log(content.substring(stdout.length, content.length - 1));
+		stdout = content;
+	},
+	stop: content => console.log("\n", content),
+	stopping: undefined
+});
