@@ -5,8 +5,30 @@ import { BaseError, InvalidStateErr, SolvableError } from './GMEdit-Constructor/
 import { GMRuntimeVersion } from './GMEdit-Constructor/js/compiler/GMVersion.js';
 import { spawn } from 'node:child_process';
 
-
-const ASSET_COMPILER_FEATURE_FLAGS = ["strip_unused_assets"];
+// Default flags GameMaker uses every time (decoded)
+const ASSET_COMPILER_FEATURE_FLAGS = [
+	"gm-auth-login",
+	"mqtt",
+	"audio-fx",
+	"operagx-yyc",
+	"intellisense",
+	"nullish",
+	"login_sso",
+	"test",
+	"custom_env",
+	"filt+fx",
+	"gx_mod_wallpaper",
+	"gx_mod_gamestrip",
+	"live_wallpaper_subscription",
+	"code-editor",
+	"strip_unused_assets",
+	"update-process",
+	"package-manager",
+	"prefab-library",
+	"svg",
+	"reddit",
+	"cronus"
+];
 
 function encodeFeatureFlags(flags) {
 	const bytes = Buffer.from(flags.join(","), "utf-8");
