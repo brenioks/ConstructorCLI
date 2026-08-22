@@ -44,73 +44,64 @@ function getFlagsForJobSettings(settings, project) {
 	const blob_extension = "win";
 
 	const flags = [
-		"-rp",
-		settings.runtime.path,
-		"-cache",
-		settings.buildPath + "/cache/",
-		"-project",
-		project.path,
-		"-runtime",
-		settings.runtimeType,
-		"-of",
-		`${settings.buildPath}/output/${projectName}.${blob_extension}`,
-		"-lf",
-		settings.user.fullPath + "/license.plist",
-		"-prefabs",
-		settings.prefabsPath,
-		"-projectool",
-		settings.projectToolPath,
+		"-rp=" + settings.runtime.path,
+		"-cache=" + settings.buildPath + "/cache/",
+		"-project=" + project.path,
+		"-runtime=" + settings.runtimeType,
+		"-of=" + `${settings.buildPath}/output/${projectName}.${blob_extension}`,
+		"-lf=" + settings.user.fullPath + "/license.plist",
 		"-ac",
 		`/ffe=${encodeFeatureFlags(ASSET_COMPILER_FEATURE_FLAGS)}`,
-		"-jsonErrors",
-		"-uf",
-		settings.user.fullPath,
-		"-config",
-		settings.configName,
+		"-jsonErrors=",
+		"-uf=" + settings.user.fullPath,
+		"-config=" + settings.configName,
 		//`-options=D:\\OneDrive\\Documents\\FreebieProjects\\DroidMaker\\CLI tests\\build\\build.bff`,
-		'-v'
 	];
 
-	// if (settings.prefabsPath !== undefined) {
-	// 	flags.push(`/prefabs=${settings.prefabsPath}`);
-	// }
+	if (settings.prefabsPath !== undefined) {
+		flags.push("-prefabs=" + settings.prefabsPath);
+	}
 
-	// ignore cache, this fixes changes not applying in yyc
+	if (settings.projectToolPath !== undefined) {
+		flags.push("-projectool=" + settings.projectToolPath);
+	}
+
+	// Ignore cache to fix changes not applying in yyc
 	if (settings.runtimeType === 'YYC') {
 		flags.push('-ic');
 	}
 
 	if (settings.threads !== undefined) {
-		flags.push(`-j=${settings.threads}`);
+		flags.push("-j=" + settings.threads);
 	}
-
+	
 	if (settings.device !== undefined) {
 		flags.push(
-			`-df=${settings.device.filePath}`,
-			`-device=${settings.device.name}`
+			"-df=" + settings.device.filePath,
+			"-device=" + settings.device.name
 		);
 	}
 
 	/** @type {string} */
-	let igorVerb = settings.task;
+	let igorAction = settings.task;
 
 	switch (settings.platform) {
 		case 'HTML5':
 			if (settings.task === 'Package') {
-				igorVerb = 'folder';
+				igorAction = 'folder';
 			}
 		break;
 
 		case 'Windows':
 		case 'Mac':
 			if (settings.task === 'Package') {
-				igorVerb = 'PackageZip';
+				igorAction = 'PackageZip';
 			}
 		break;
 	}
 
-	flags.push('--');
-	flags.push(settings.platform, igorVerb);
+	// Eg: "-v -- Windows Run"
+	flags.push("-v", "--", settings.platform, igorAction);
 
 	return flags;
 }
