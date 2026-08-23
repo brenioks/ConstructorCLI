@@ -49,7 +49,7 @@ function getFlagsForJobSettings(settings, project) {
 		"-project=" + project.path,
 		"-runtime=" + settings.runtimeType,
 		"-of=" + `${settings.buildPath}/output/${projectName}.${blob_extension}`,
-		"-lf=" + settings.user.fullPath + "/license.plist",
+		//"-lf=" + settings.user.fullPath + "/license.plist",
 		"-ac",
 		`/ffe=${encodeFeatureFlags(ASSET_COMPILER_FEATURE_FLAGS)}`,
 		"-jsonErrors=",
@@ -85,19 +85,18 @@ function getFlagsForJobSettings(settings, project) {
 	/** @type {string} */
 	let igorAction = settings.task;
 
-	switch (settings.platform) {
-		case 'HTML5':
-			if (settings.task === 'Package') {
+	if (settings.task === "Package") {
+		flags.push("-tf=" + settings.packageFile);
+		switch (settings.platform) {
+			case 'HTML5':
 				igorAction = 'folder';
-			}
-		break;
+			break;
 
-		case 'Windows':
-		case 'Mac':
-			if (settings.task === 'Package') {
+			case 'Windows':
+			case 'Mac':
 				igorAction = 'PackageZip';
-			}
-		break;
+			break;
+		}
 	}
 
 	// Eg: "-v -- Windows Run"
@@ -137,8 +136,12 @@ async function start(settings, project) {
 
 	const job = new IgorJob(1, settings, proc, project, startTime);
 
-	//this.jobs.push(job);
-	//job.events.once('stop', () => this.removeJob(job));
+	// Open explorer inside the package directory with the package.zip selected
+	const packageDir = settings.packageFile.substring(0, settings.packageFile.lastIndexOf("/"));
+	const packageFile = settings.packageFile.substring(settings.packageFile.lastIndexOf("/") + 1);
+	if (settings.task === "Package") {
+		job.events.once('stop', () => spawn("explorer", ["/select,", ".\\" + packageFile], {cwd: packageDir}));
+	}
 
 	return Ok(job);
 }
@@ -162,7 +165,7 @@ const user = {
 console.log("Hi Igor starter!");
 
 const startResult = await start({
-	task: 'Run',	// 'Run' | 'Package'
+	task: 'Package',	// 'Run' | 'Package'
 	user,
 	runtime,
 	prefabsPath: "C:/ProgramData/GameMakerStudio2-LTS2026/Prefabs",
@@ -171,7 +174,8 @@ const startResult = await start({
 	platform: igorPaths.HOST_PLATFORM,
 	device: undefined,
 	runtimeType: 'VM',
-	configName: 'Default'
+	configName: 'Default',
+	packageFile: "D:/OneDrive/Documents/FreebieProjects/DroidMaker/ConstructorCLI/test/build/output/package.zip"
 }, {
 	displayName: "philosophers pit",
 	dir: "D:/OneDrive/Documents/GameMakerStudio2/philosophers pit",
