@@ -1,12 +1,21 @@
-import { areSdkVersionsConfigured } from "./project_android_setup.ts";
+import { addDefaultSdkVersions, areSdkVersionsConfigured } from "./project_android_setup.ts";
 
 
 // Test project_android_setup.ts
 const testOptions = {
-  "option_android_compile_sdk":"34",
-  "option_android_minimum_sdk":"21",
-  "option_android_support_lib":"34.0.0",
-  "option_android_target_sdk":"34",
+  "option_android_compile_sdk":"",
+  "option_android_minimum_sdk":"",
+  "option_android_support_lib":"",
+  "option_android_target_sdk":"",
+  "another_thing":255,
+  "option_test_2":true
 }
 
-console.log(areSdkVersionsConfigured(testOptions));
+if (!areSdkVersionsConfigured(testOptions)) {
+    console.log("No SDK versions found!\nAdding default SDK versions...");
+    const newOptions = addDefaultSdkVersions(testOptions)
+    console.log(testOptions);
+    console.log(newOptions);
+}
+
+console.log("Configured");
