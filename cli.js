@@ -171,7 +171,7 @@ const startResult = await start({
 	prefabsPath: "C:/ProgramData/GameMakerStudio2-LTS2026/Prefabs",
 	projectToolPath: "C:/ProgramData/GameMakerStudio2-LTS2026/Plugins/@gm-tools-project-tool-win-x64/ProjectTool.exe",
 	buildPath: "D:/OneDrive/Documents/FreebieProjects/DroidMaker/ConstructorCLI/test/build",
-	platform: igorPaths.HOST_PLATFORM,
+	platform: "Android",
 	device: undefined,
 	runtimeType: 'VM',
 	configName: 'Default',
