@@ -22,7 +22,6 @@ function getJSONDirFiles(dirpath) {
     let filenameUrlDict = {};
     let files = fs.readdirSync(physicalDirPath);
     files.forEach(filename => {
-        filename = filename.replaceAll(' ', '%20');
         let fileurl = `${dirpath}${(!dirpath.endsWith('/')? '/' : '')}${filename}`;
         let physicalPath = path.join(physicalDirPath, filename);
         if (!fs.existsSync(physicalPath))
@@ -30,17 +29,18 @@ function getJSONDirFiles(dirpath) {
         let isDirectory = fs.statSync(physicalPath).isDirectory();
         let dirSlash = isDirectory? '/' : '';
         let folderIcon = isDirectory? '📁 ' : '';
-        filenameUrlDict[folderIcon + filename + dirSlash] = DomainUrl + fileurl + dirSlash;
+        filenameUrlDict[folderIcon + filename + dirSlash] = DomainUrl + fileurl.replaceAll(' ', '%20') + dirSlash;
     });
     return filenameUrlDict;
 }
 
-app.get('/{*splat}', (req, res) => {
+app.get('/{*splat}', (req, res, next) => {
     if (DomainUrl == '')
         DomainUrl = `${req.protocol}://${req.host}`;
 
     let fileurl = req.path;
-    let physicalPath = path.join(ORIGIN_DIR + fileurl)
+    let physicalPath = path.join(ORIGIN_DIR + fileurl);
+    physicalPath = physicalPath.replaceAll('%20', ' ');
     if (!fs.existsSync(physicalPath))
         return res.status(404);
     
@@ -52,7 +52,12 @@ app.get('/{*splat}', (req, res) => {
         }
         return res.status(200).json(response);
     }
-    res.status(200).json(fileurl);
+    res.download(physicalPath, err => {
+        if (!err) return;
+        if (err.status !== 404) return next(err);
+
+        return res.status(404);
+    });
 });
 
 app.listen(PORT, () => {
