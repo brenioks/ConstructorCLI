@@ -170,7 +170,7 @@ const startResult = await start({
 	runtime,
 	prefabsPath: "C:/ProgramData/GameMakerStudio2-LTS2026/Prefabs",
 	projectToolPath: "C:/ProgramData/GameMakerStudio2-LTS2026/Plugins/@gm-tools-project-tool-win-x64/ProjectTool.exe",
-	buildPath: "D:/OneDrive/Documents/FreebieProjects/DroidMaker/ConstructorCLI/test/build",
+	buildPath: "D:/DProjects/DroidMaker/ConstructorCLI/test/build",
 	platform: "Android",
 	device: undefined,
 	runtimeType: 'VM',
@@ -199,3 +199,6 @@ job.events.createGroup({
 	stop: content => console.log("\n", content),
 	stopping: undefined
 });
+
+// For my happiness, the compiler crashes only after compiling everything correctly
+// and right when it starts doing android related stuff. So, no need to handle apks
