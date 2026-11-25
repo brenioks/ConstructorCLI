@@ -9,6 +9,7 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = 3015;
 
+const FILE_SYSTEM_PAGE = '/cdn';
 const BUILD_DIR = 'test/build';
 const ORIGIN_DIR = path.join(__dirname, BUILD_DIR);
 
@@ -29,16 +30,16 @@ function getJSONDirFiles(dirpath) {
         let isDirectory = fs.statSync(physicalPath).isDirectory();
         let dirSlash = isDirectory? '/' : '';
         let folderIcon = isDirectory? '📁 ' : '';
-        filenameUrlDict[folderIcon + filename + dirSlash] = DomainUrl + fileurl.replaceAll(' ', '%20') + dirSlash;
+        filenameUrlDict[folderIcon + filename + dirSlash] = DomainUrl + FILE_SYSTEM_PAGE + fileurl.replaceAll(' ', '%20') + dirSlash;
     });
     return filenameUrlDict;
 }
 
-app.get('/{*splat}', (req, res, next) => {
+app.get(`${FILE_SYSTEM_PAGE}{*splat}`, (req, res, next) => {
     if (DomainUrl == '')
         DomainUrl = `${req.protocol}://${req.host}`;
 
-    let fileurl = req.path;
+    let fileurl = req.path.replace(FILE_SYSTEM_PAGE, '');
     let physicalPath = path.join(ORIGIN_DIR + fileurl);
     physicalPath = physicalPath.replaceAll('%20', ' ');
     if (!fs.existsSync(physicalPath))
@@ -60,8 +61,12 @@ app.get('/{*splat}', (req, res, next) => {
     });
 });
 
+app.get('/{*splat}', (req, res) => {
+    res.send("no existance");
+});
+
 app.listen(PORT, () => {
     console.log(`Listening to port ${PORT}` + ` http://localhost:${PORT}`);
 });
 
-app.use(express.static(BUILD_DIR));
+app.use(FILE_SYSTEM_PAGE, express.static(BUILD_DIR));
