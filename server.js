@@ -1,13 +1,62 @@
 import express from 'express';
+import path from 'node:path';
+import fs from 'fs';
+import { fileURLToPath } from 'node:url';
+
+const __filename = fileURLToPath(import.meta.url); 
+const __dirname = path.dirname(__filename); 
 
 const app = express();
-const PORT = 3016;
+const PORT = 3015;
 
-app.use('/', (req, res) => {
-    res.status(200).json("hi");
+const BUILD_DIR = 'test/build';
+const ORIGIN_DIR = path.join(__dirname, BUILD_DIR);
+
+var DomainUrl = '';
+
+const isObjectEmpty = (objectName) => {
+  return Object.keys(objectName).length === 0
+}
+function getJSONDirFiles(dirpath) {
+    let physicalDirPath = path.join(ORIGIN_DIR, dirpath);
+    let filenameUrlDict = {};
+    let files = fs.readdirSync(physicalDirPath);
+    files.forEach(filename => {
+        filename = filename.replaceAll(' ', '%20');
+        let fileurl = `${dirpath}${(!dirpath.endsWith('/')? '/' : '')}${filename}`;
+        let physicalPath = path.join(physicalDirPath, filename);
+        if (!fs.existsSync(physicalPath))
+            return;
+        let isDirectory = fs.statSync(physicalPath).isDirectory();
+        let dirSlash = isDirectory? '/' : '';
+        let folderIcon = isDirectory? '📁 ' : '';
+        filenameUrlDict[folderIcon + filename + dirSlash] = DomainUrl + fileurl + dirSlash;
+    });
+    return filenameUrlDict;
+}
+
+app.get('/{*splat}', (req, res) => {
+    if (DomainUrl == '')
+        DomainUrl = `${req.protocol}://${req.host}`;
+
+    let fileurl = req.path;
+    let physicalPath = path.join(ORIGIN_DIR + fileurl)
+    if (!fs.existsSync(physicalPath))
+        return res.status(404);
+    
+    if (fs.statSync(physicalPath).isDirectory()) {
+        const JSONfiles = getJSONDirFiles(fileurl);
+        let response = 'empty directory.';
+        if (!isObjectEmpty(JSONfiles)) {
+            response = JSONfiles;
+        }
+        return res.status(200).json(response);
+    }
+    res.status(200).json(fileurl);
 });
 
 app.listen(PORT, () => {
     console.log(`Listening to port ${PORT}` + ` http://localhost:${PORT}`);
 });
 
+app.use(express.static(BUILD_DIR));
